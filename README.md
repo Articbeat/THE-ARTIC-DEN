@@ -8,10 +8,10 @@ A chill webpage with a lofi vibe — perfect for relaxing/studying 🎧
 - Responsive layout
 
 ## 🛠 Tech Used
-HTML, CSS, JavaScript
+HTML, CSS, JavaScript, SDK database
 
 ## 🚀 Live Demo
-https://your-username.github.io/THE-ARTIC-DEN
+https://articbeat.github.io/THE-ARTIC-DEN
 
 ## 📥 How to Use
 1. Clone this repo
