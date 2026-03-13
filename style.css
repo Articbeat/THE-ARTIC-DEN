@@ -85,7 +85,8 @@ section {
   border-radius: 12px;            /* slightly rounded corners */
   padding: 1.5rem;
   width: 280px;
-  min-height: 200px;              /* keeps all sections same height */
+  min-height: 200px;  
+  max-height: 200px; /* keeps all sections same height */
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); /* soft shadow */
   display: flex;
   flex-direction: column;
