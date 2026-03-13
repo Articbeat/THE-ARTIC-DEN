@@ -28,7 +28,7 @@ signInAnonymously(auth)
     uid = auth.currentUser.uid;
     console.log("✅ Signed in anonymously:", uid);
 
-    // After signing in, register this user in activeUsers
+    // Register this user in activeUsers
     const thisUserRef = ref(db, "activeUsers/" + uid);
     set(thisUserRef, { joined: Date.now() });
     onDisconnect(thisUserRef).remove();
@@ -105,14 +105,14 @@ themeToggle.addEventListener("click", () => {
   themeToggle.textContent = darkMode ? "☀️ Switch Theme" : "🌙 Switch Theme";
 });
 
-// -------------------- Real-Time Comments --------------------
+// -------------------- Real-Time Comments with Auto-Reset --------------------
 const commentInput = document.getElementById("commentInput");
 const addComment = document.getElementById("addComment");
 const commentList = document.getElementById("commentList");
 
 addComment.addEventListener("click", async () => {
   const text = commentInput.value.trim();
-  if (!text || !uid) return; // wait for auth
+  if (!text || !uid) return;
 
   try {
     await push(ref(db, "comments"), {
@@ -127,15 +127,26 @@ addComment.addEventListener("click", async () => {
   }
 });
 
-// Listen for new comments
 const commentsRef = ref(db, "comments");
 onValue(commentsRef, (snapshot) => {
   commentList.innerHTML = "";
   const data = snapshot.val();
   if (!data) return;
 
+  const now = Date.now();
+  const expiryTime = 24 * 60 * 60 * 1000; // 24 hours in ms
+
+  // Delete messages older than expiryTime
+  for (const id in data) {
+    if (now - data[id].timestamp > expiryTime) {
+      remove(ref(db, "comments/" + id));
+    }
+  }
+
+  // Display remaining messages
   const comments = Object.values(data)
-    .sort((a,b) => a.timestamp - b.timestamp);
+    .filter(c => now - c.timestamp <= expiryTime)
+    .sort((a, b) => a.timestamp - b.timestamp);
 
   comments.forEach(c => {
     const div = document.createElement("div");
