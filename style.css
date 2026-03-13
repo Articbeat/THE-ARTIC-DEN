@@ -239,4 +239,25 @@ footer {
 .dark .floating-socials a img {
   filter: invert(0.9);
 }
+.timer-options {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.timer-btn {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s ease;
+}
+
+.timer-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
 
