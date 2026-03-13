@@ -81,16 +81,16 @@ main {
 }
 
 section {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
+  background: rgba(0, 0, 0, 0.3); /* solid box */
+  border-radius: 12px;            /* slightly rounded corners */
   padding: 1.5rem;
-  backdrop-filter: blur(15px);
   width: 280px;
-  min-height: 450px; /* keeps all sections same height */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  min-height: 450px;              /* keeps all sections same height */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3); /* soft shadow */
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* content aligns top */
+  justify-content: flex-start;    /* content aligns top */
+  backdrop-filter: none;          /* remove blur effect */
 }
 
 /* Pomodoro Timer */
