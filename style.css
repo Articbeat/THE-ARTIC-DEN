@@ -57,7 +57,7 @@ h1 {
 }
 
 button {
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.12);
   border: none;
   padding: 0.5rem 1.2rem;
   border-radius: 10px;
@@ -68,7 +68,7 @@ button {
 }
 
 button:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* ===== Main Sections ===== */
@@ -81,22 +81,68 @@ main {
 }
 
 section {
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.08); /* glass effect */
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-radius: 16px;
   padding: 1.5rem;
-  backdrop-filter: blur(15px);
   width: 280px;
-  min-height: 450px; /* keeps all sections same height */
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+  min-height: 450px; /* all sections equal height */
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start; /* content aligns top */
+  justify-content: flex-start;
+  transition: transform 0.3s ease, box-shadow 0.3s ease, background 0.3s ease;
+}
+
+section:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.25);
+  background: rgba(255, 255, 255, 0.12);
 }
 
 /* Pomodoro Timer */
 #time {
   font-size: 2.5rem;
   margin: 1rem 0;
+}
+
+/* ===== Custom Timer Input ===== */
+.custom-timer {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.custom-timer input {
+  width: 80px;
+  padding: 0.4rem;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  text-align: center;
+}
+
+.custom-timer input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.custom-timer button {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+  border: none;
+  padding: 0.4rem 1rem;
+  border-radius: 10px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: 0.3s ease;
+}
+
+.custom-timer button:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
 /* Notes Section */
@@ -108,23 +154,28 @@ textarea {
   border-radius: 10px;
   padding: 10px;
   resize: none;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.12);
   color: #fff;
+  transition: 0.3s ease;
 }
 
-/* ===== Comments ===== */
+textarea:focus {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* ===== Comments Section ===== */
 .comments {
   text-align: left;
   display: flex;
   flex-direction: column;
-  flex-grow: 1; /* fills remaining space */
+  flex-grow: 1;
 }
 
 #commentList {
-  height: 200px;       /* fixed height */
-  overflow-y: auto;    /* scrollbar appears when needed */
+  height: 200px;         /* fixed height */
+  overflow-y: auto;      /* scrollbar appears when needed */
   margin-bottom: 0.5rem;
-  padding-right: 5px;
+  padding-right: 5px;    /* prevent text overlap with scrollbar */
   display: flex;
   flex-direction: column;
   gap: 6px;
@@ -135,7 +186,7 @@ textarea {
   padding: 0.6rem;
   border-radius: 8px;
   font-size: 0.9rem;
-  word-wrap: break-word; /* long text wraps */
+  word-wrap: break-word;
 }
 
 /* Chat input & button spacing */
@@ -229,49 +280,12 @@ footer {
 }
 
 .dark section {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.05);
 }
 
-.dark textarea {
+.dark textarea,
+.dark .custom-timer input,
+.dark button,
+.dark .timer-btn {
   background: rgba(255, 255, 255, 0.1);
-}
-
-.dark .floating-socials a img {
-  filter: invert(0.9);
-}
-.custom-timer {
-  display: flex;
-  justify-content: center;
-  gap: 10px;
-  margin-top: 1rem;
-}
-
-.custom-timer input {
-  width: 80px;
-  padding: 0.4rem;
-  border-radius: 10px;
-  border: none;
-  outline: none;
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  text-align: center;
-}
-
-.custom-timer input::placeholder {
-  color: rgba(255, 255, 255, 0.7);
-}
-
-.custom-timer button {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  border: none;
-  padding: 0.4rem 1rem;
-  border-radius: 10px;
-  cursor: pointer;
-  font-weight: 600;
-  transition: 0.3s ease;
-}
-
-.custom-timer button:hover {
-  background: rgba(255, 255, 255, 0.3);
 }
