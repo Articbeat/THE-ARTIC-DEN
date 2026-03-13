@@ -121,14 +121,13 @@ textarea {
 }
 
 #commentList {
-  flex-grow: 1;         /* fills space inside section */
-  max-height: 100%;     /* never exceeds section height */
-  overflow-y: auto;     /* scrollbar appears when needed */
+  height: 200px;       /* fixed height */
+  overflow-y: auto;    /* scrollbar appears when needed */
   margin-bottom: 0.5rem;
-  padding-right: 5px;   /* prevents scrollbar overlapping text */
+  padding-right: 5px;
   display: flex;
   flex-direction: column;
-  gap: 6px;             /* spacing between comments */
+  gap: 6px;
 }
 
 .comment {
@@ -240,3 +239,4 @@ footer {
 .dark .floating-socials a img {
   filter: invert(0.9);
 }
+
