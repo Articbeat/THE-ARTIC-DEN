@@ -1,7 +1,11 @@
+// -------------------- Firebase SDK --------------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, set, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+import { getDatabase, ref, push, onValue, set, remove, onDisconnect } 
+  from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+import { getAuth, signInAnonymously } 
+  from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
-// Firebase config
+// -------------------- Firebase Config --------------------
 const firebaseConfig = {
   apiKey: "AIzaSyCTSXqcVmFKkvo0gXVY2xez9Yx7su3iFMw",
   authDomain: "cozy-study-space.firebaseapp.com",
@@ -15,8 +19,24 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 
-// ===== Ambient Sound Toggle =====
+// -------------------- Anonymous Auth --------------------
+let uid = null;
+signInAnonymously(auth)
+  .then(() => {
+    uid = auth.currentUser.uid;
+    console.log("✅ Signed in anonymously:", uid);
+
+    // Register this user in activeUsers
+    const thisUserRef = ref(db, "activeUsers/" + uid);
+    set(thisUserRef, { joined: Date.now() });
+    onDisconnect(thisUserRef).remove();
+    window.addEventListener("beforeunload", () => remove(thisUserRef));
+  })
+  .catch(err => console.error("❌ Auth error:", err));
+
+// -------------------- Ambient Sound Toggle --------------------
 const soundToggle = document.getElementById("soundToggle");
 const ambient = document.getElementById("ambient");
 let isPlaying = false;
@@ -32,7 +52,7 @@ soundToggle.addEventListener("click", () => {
   isPlaying = !isPlaying;
 });
 
-// ===== Timer =====
+// -------------------- Pomodoro Timer --------------------
 let totalTime = 45 * 60;
 let remaining = totalTime;
 let timer = null;
@@ -46,7 +66,6 @@ function updateTime() {
   timeDisplay.textContent = `${mins}:${secs < 10 ? "0" : ""}${secs}`;
 }
 
-// Start timer
 startBtn.addEventListener("click", () => {
   clearInterval(timer);
   timer = setInterval(() => {
@@ -62,41 +81,15 @@ startBtn.addEventListener("click", () => {
   }, 1000);
 });
 
-// Reset timer
 resetBtn.addEventListener("click", () => {
   clearInterval(timer);
   remaining = totalTime;
   updateTime();
 });
 
-// ===== Preset Timer Buttons (Pomodoro / Breaks) =====
-document.querySelectorAll(".timer-btn").forEach(btn => {
-  btn.addEventListener("click", () => {
-    let minutes = parseInt(btn.getAttribute("data-minutes"));
-    totalTime = minutes * 60;
-    remaining = totalTime;
-    updateTime();
-    clearInterval(timer);
-  });
-});
-
-// ===== Custom Timer Input =====
-const customTimeInput = document.getElementById("customTime");
-const setTimeBtn = document.getElementById("setTime");
-
-setTimeBtn.addEventListener("click", () => {
-  let minutes = parseInt(customTimeInput.value);
-  if (isNaN(minutes) || minutes <= 0) return alert("Enter a valid number!");
-  
-  totalTime = minutes * 60;
-  remaining = totalTime;
-  updateTime();
-  clearInterval(timer);
-});
-
 updateTime();
 
-// ===== Notes Auto-Save =====
+// -------------------- Notes Auto-Save --------------------
 const noteArea = document.getElementById("noteArea");
 noteArea.value = localStorage.getItem("cozyNotes") || "";
 
@@ -104,7 +97,7 @@ noteArea.addEventListener("input", () => {
   localStorage.setItem("cozyNotes", noteArea.value);
 });
 
-// ===== Theme Toggle =====
+// -------------------- Theme Toggle --------------------
 const themeToggle = document.getElementById("themeToggle");
 themeToggle.addEventListener("click", () => {
   document.body.classList.toggle("dark");
@@ -112,68 +105,81 @@ themeToggle.addEventListener("click", () => {
   themeToggle.textContent = darkMode ? "☀️ Switch Theme" : "🌙 Switch Theme";
 });
 
-// ===== Real-Time Comments =====
+// -------------------- Real-Time Comments with Auto-Reset --------------------
 const commentInput = document.getElementById("commentInput");
 const addComment = document.getElementById("addComment");
 const commentList = document.getElementById("commentList");
-const commentsRef = ref(db, "comments");
 
-addComment.addEventListener("click", () => {
+addComment.addEventListener("click", async () => {
   const text = commentInput.value.trim();
-  if (text) {
-    push(commentsRef, {
-      text,
-      timestamp: Date.now()
-    })
-      .then(() => console.log("✅ Comment sent"))
-      .catch(err => console.error("❌ Firebase error:", err));
+  if (!text || !uid) return;
+
+  try {
+    await push(ref(db, "comments"), {
+      text: text,
+      timestamp: Date.now(),
+      uid: uid
+    });
     commentInput.value = "";
+    console.log("✅ Comment saved to Firebase");
+  } catch (err) {
+    console.error("🔥 Firebase write failed:", err);
   }
 });
 
-// Load comments
-onValue(commentsRef, snapshot => {
-  const data = snapshot.val();
+const commentsRef = ref(db, "comments");
+onValue(commentsRef, (snapshot) => {
   commentList.innerHTML = "";
-  if (data) {
-    const sorted = Object.entries(data).sort((a,b) => (a[1].timestamp||0) - (b[1].timestamp||0));
-    for (let [id, c] of sorted) {
-      const div = document.createElement("div");
-      div.classList.add("comment");
-      div.textContent = c.text;
-      commentList.appendChild(div);
+  const data = snapshot.val();
+  if (!data) return;
+
+  const now = Date.now();
+  const expiryTime = 24 * 60 * 60 * 1000; // 24 hours in ms
+
+  // Delete messages older than expiryTime
+  for (const id in data) {
+    if (now - data[id].timestamp > expiryTime) {
+      remove(ref(db, "comments/" + id));
     }
-    commentList.scrollTop = commentList.scrollHeight; // auto scroll
   }
+
+  // Display remaining messages
+  const comments = Object.values(data)
+    .filter(c => now - c.timestamp <= expiryTime)
+    .sort((a, b) => a.timestamp - b.timestamp);
+
+  comments.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "comment";
+    div.textContent = c.text;
+    commentList.appendChild(div);
+  });
 });
 
-// ===== Live User Counter =====
-const usersRef = ref(db, "activeUsers");
+// -------------------- Live User Counter --------------------
 const studyCountDisplay = document.getElementById("studyCount");
 
-const thisUser = push(usersRef);
-set(thisUser, { joined: Date.now() });
-onDisconnect(thisUser).remove();
-window.addEventListener("beforeunload", () => remove(thisUser));
-
-onValue(usersRef, snapshot => {
+const usersRef = ref(db, "activeUsers");
+onValue(usersRef, (snapshot) => {
   const data = snapshot.val();
   const now = Date.now();
   let count = 0;
+
   if (data) {
     for (const id in data) {
       const joinedTime = data[id].joined || 0;
-      if (now - joinedTime < 10 * 60 * 1000) { // 10 min window
+      if (now - joinedTime < 10 * 60 * 1000) {
         count++;
       } else {
         remove(ref(db, "activeUsers/" + id));
       }
     }
   }
+
   studyCountDisplay.textContent = count;
 });
 
-// ===== Particles Background =====
+// -------------------- Particles Background --------------------
 const canvas = document.getElementById("particles");
 const ctx = canvas.getContext("2d");
 let particles = [];
