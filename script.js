@@ -1,7 +1,11 @@
+// -------------------- Firebase SDK --------------------
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-app.js";
-import { getDatabase, ref, push, onValue, set, remove, onDisconnect } from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+import { getDatabase, ref, push, onValue, set, remove, onDisconnect } 
+  from "https://www.gstatic.com/firebasejs/10.13.0/firebase-database.js";
+import { getAuth, signInAnonymously } 
+  from "https://www.gstatic.com/firebasejs/10.13.0/firebase-auth.js";
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+// -------------------- Firebase Config --------------------
 const firebaseConfig = {
   apiKey: "AIzaSyCTSXqcVmFKkvo0gXVY2xez9Yx7su3iFMw",
   authDomain: "cozy-study-space.firebaseapp.com",
@@ -15,8 +19,24 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 const db = getDatabase(app);
+const auth = getAuth(app);
 
-// 🎧 Ambient Sound Toggle
+// -------------------- Anonymous Auth --------------------
+let uid = null;
+signInAnonymously(auth)
+  .then(() => {
+    uid = auth.currentUser.uid;
+    console.log("✅ Signed in anonymously:", uid);
+
+    // After signing in, register this user in activeUsers
+    const thisUserRef = ref(db, "activeUsers/" + uid);
+    set(thisUserRef, { joined: Date.now() });
+    onDisconnect(thisUserRef).remove();
+    window.addEventListener("beforeunload", () => remove(thisUserRef));
+  })
+  .catch(err => console.error("❌ Auth error:", err));
+
+// -------------------- Ambient Sound Toggle --------------------
 const soundToggle = document.getElementById("soundToggle");
 const ambient = document.getElementById("ambient");
 let isPlaying = false;
@@ -32,7 +52,7 @@ soundToggle.addEventListener("click", () => {
   isPlaying = !isPlaying;
 });
 
-// ⏳ Pomodoro Timer
+// -------------------- Pomodoro Timer --------------------
 let totalTime = 45 * 60;
 let remaining = totalTime;
 let timer = null;
@@ -69,7 +89,7 @@ resetBtn.addEventListener("click", () => {
 
 updateTime();
 
-// 📝 Notes Auto-Save
+// -------------------- Notes Auto-Save --------------------
 const noteArea = document.getElementById("noteArea");
 noteArea.value = localStorage.getItem("cozyNotes") || "";
 
@@ -77,7 +97,7 @@ noteArea.addEventListener("input", () => {
   localStorage.setItem("cozyNotes", noteArea.value);
 });
 
-// 🌙 Theme Toggle
+// -------------------- Theme Toggle --------------------
 const themeToggle = document.getElementById("themeToggle");
 themeToggle.addEventListener("click", () => {
   document.body.classList.toggle("dark");
@@ -85,48 +105,50 @@ themeToggle.addEventListener("click", () => {
   themeToggle.textContent = darkMode ? "☀️ Switch Theme" : "🌙 Switch Theme";
 });
 
-// 💬 Real-Time Comments
+// -------------------- Real-Time Comments --------------------
 const commentInput = document.getElementById("commentInput");
 const addComment = document.getElementById("addComment");
 const commentList = document.getElementById("commentList");
-const commentsRef = ref(db, "comments");
 
-addComment.addEventListener("click", () => {
+addComment.addEventListener("click", async () => {
   const text = commentInput.value.trim();
-  if (text) {
-    push(commentsRef, {
-      text,
-      timestamp: Date.now()
-    })
-      .then(() => console.log("✅ Comment sent"))
-      .catch(err => console.error("❌ Firebase error:", err));
+  if (!text || !uid) return; // wait for auth
+
+  try {
+    await push(ref(db, "comments"), {
+      text: text,
+      timestamp: Date.now(),
+      uid: uid
+    });
     commentInput.value = "";
+    console.log("✅ Comment saved to Firebase");
+  } catch (err) {
+    console.error("🔥 Firebase write failed:", err);
   }
 });
 
+// Listen for new comments
+const commentsRef = ref(db, "comments");
 onValue(commentsRef, (snapshot) => {
-  const data = snapshot.val();
   commentList.innerHTML = "";
-  if (data) {
-    const sorted = Object.entries(data).sort((a, b) => (a[1].timestamp || 0) - (b[1].timestamp || 0));
-    for (let [id, c] of sorted) {
-      const div = document.createElement("div");
-      div.classList.add("comment");
-      div.textContent = c.text;
-      commentList.appendChild(div);
-    }
-  }
+  const data = snapshot.val();
+  if (!data) return;
+
+  const comments = Object.values(data)
+    .sort((a,b) => a.timestamp - b.timestamp);
+
+  comments.forEach(c => {
+    const div = document.createElement("div");
+    div.className = "comment";
+    div.textContent = c.text;
+    commentList.appendChild(div);
+  });
 });
 
-// 🧍‍♀️ Live User Counter
-const usersRef = ref(db, "activeUsers");
+// -------------------- Live User Counter --------------------
 const studyCountDisplay = document.getElementById("studyCount");
 
-const thisUser = push(usersRef);
-set(thisUser, { joined: Date.now() });
-onDisconnect(thisUser).remove();
-window.addEventListener("beforeunload", () => remove(thisUser));
-
+const usersRef = ref(db, "activeUsers");
 onValue(usersRef, (snapshot) => {
   const data = snapshot.val();
   const now = Date.now();
@@ -146,7 +168,7 @@ onValue(usersRef, (snapshot) => {
   studyCountDisplay.textContent = count;
 });
 
-// 🌌 Particles
+// -------------------- Particles Background --------------------
 const canvas = document.getElementById("particles");
 const ctx = canvas.getContext("2d");
 let particles = [];
@@ -193,4 +215,3 @@ function draw() {
   requestAnimationFrame(draw);
 }
 draw();
-
