@@ -113,7 +113,7 @@ textarea {
 
 #commentList {
   max-height: 200px;        /* fixed height */
-  overflow-y: auto;         /* vertical scrollbar */
+  overflow-y: scroll;         /* vertical scrollbar */
   margin-bottom: 0.5rem;
   padding-right: 5px;       /* prevent scrollbar overlap with text */
   display: flex;
@@ -221,4 +221,5 @@ footer {
 .dark .floating-socials a img {
   filter: invert(0.9);
 }
+
 
