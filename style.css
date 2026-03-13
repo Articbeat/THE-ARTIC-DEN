@@ -239,14 +239,29 @@ footer {
 .dark .floating-socials a img {
   filter: invert(0.9);
 }
-.timer-options {
+.custom-timer {
   display: flex;
   justify-content: center;
   gap: 10px;
   margin-top: 1rem;
 }
 
-.timer-btn {
+.custom-timer input {
+  width: 80px;
+  padding: 0.4rem;
+  border-radius: 10px;
+  border: none;
+  outline: none;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  text-align: center;
+}
+
+.custom-timer input::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.custom-timer button {
   background: rgba(255, 255, 255, 0.15);
   color: #fff;
   border: none;
@@ -257,7 +272,6 @@ footer {
   transition: 0.3s ease;
 }
 
-.timer-btn:hover {
+.custom-timer button:hover {
   background: rgba(255, 255, 255, 0.3);
 }
-
